@@ -6,9 +6,7 @@ fn main() {
 	let mut root = Cursive::new();
     root.add_global_callback('q', |s| s.quit());
     
-    let main_view = Dialog::around(
-        
-        SelectView::new().h_align(HAlign::Center)
+    let main_select = SelectView::new().h_align(HAlign::Center)
         .item("Source", 1)
         .item("Hostname", 2)
         .item("Locale", 3)
@@ -19,8 +17,12 @@ fn main() {
         .item("Partitioning", 8)
         .item("Setup Bootloader", 9)
         .item("Additional Repositories", 10)
-        .item("Install", 11))
-        
+        .item("Install", 11)
+        .on_submit(|root_, val| {
+            root_.pop_layer();
+            // call func in selected's value
+        });
+    let main_view = Dialog::around(main_select)
         .title("Chimera Linux Installer");
 
     root.add_layer(main_view);
