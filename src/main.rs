@@ -1,31 +1,50 @@
+use chimera_install::{self, RootData};
 use cursive::{Cursive, CursiveExt};
 use cursive::views::{Dialog, SelectView};
 use cursive::align::{HAlign};
 
+type MenuFunc = fn(root: &Cursive);
+
 fn main() {
 	let mut root = Cursive::new();
+    let mut root_data = RootData {
+        source: todo!(),
+        hostname: todo!(),
+        locale: todo!(),
+        keyboard: todo!(),
+        timezone: todo!(),
+        root_password: todo!(),
+        additional_users: todo!(),
+        partition: todo!(),
+        setup_bootloader: todo!(),
+        additional_repositories: todo!()
+    };
+
     root.add_global_callback('q', |s| s.quit());
     
     let main_select = SelectView::new().h_align(HAlign::Center)
-        .item("Source", 1)
-        .item("Hostname", 2)
-        .item("Locale", 3)
-        .item("Keyboard", 4)
-        .item("Timezone", 5)
-        .item("Root Password", 6)
-        .item("Additional Users", 7)
-        .item("Partitioning", 8)
-        .item("Setup Bootloader", 9)
-        .item("Additional Repositories", 10)
-        .item("Install", 11)
-        .on_submit(|root_, val| {
-            root_.pop_layer();
-            // call func in selected's value
+        .item("Source", SOURCE_MENU)
+        .item("Hostname", SOURCE_MENU)
+        .item("Locale", SOURCE_MENU)
+        .item("Keyboard", SOURCE_MENU)
+        .item("Timezone", SOURCE_MENU)
+        .item("Root Password", SOURCE_MENU)
+        .item("Additional Users", SOURCE_MENU)
+        .item("Partitioning", SOURCE_MENU)
+        .item("Setup Bootloader", SOURCE_MENU)
+        .item("Additional Repositories", SOURCE_MENU)
+        .item("Install", SOURCE_MENU)
+        .on_submit(|parent, val| {
+            parent.pop_layer();
+            val(parent);
         });
     let main_view = Dialog::around(main_select)
         .title("Chimera Linux Installer");
 
-    root.add_layer(main_view);
 
     root.run()
 }
+
+const SOURCE_MENU: MenuFunc = |root: &Cursive| {
+
+};
