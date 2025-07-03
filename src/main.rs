@@ -1,4 +1,4 @@
-use chimera_install::{get_locales, RootData};
+use chimera_install::{get_locales, get_timezones, RootData};
 use cursive::align::HAlign;
 use cursive::event::Key;
 use cursive::view::{Nameable, Resizable};
@@ -58,7 +58,6 @@ fn wrap_with_shortcuts<T: View>(f: T) -> OnEventView<T> {
         s.pop_layer();
     }); // \1xb is the escape key
 }
-
 
 fn source_menu(s: &mut Cursive) {
     let mut group: RadioGroup<&bool> = RadioGroup::new();
@@ -132,7 +131,26 @@ fn locale_menu(s: &mut Cursive) {
 }
 
 fn timezone_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info("Timezone menu not implemented."));
+    s.add_layer(wrap_with_shortcuts(
+        Dialog::new()
+            .title("Select Timezone")
+            .content(ScrollView::new(
+                SelectView::<String>::new()
+                    .h_align(HAlign::Center)
+                    .with_all(
+                        get_timezones()
+                    )
+                    .on_submit(|siv, val: &String| {
+                        siv.with_user_data(|data: &mut RootData| {
+                            data.timezone = Some(val.clone());
+                        });
+                        siv.pop_layer();
+                    }),
+            ))
+            .button("Cancel", |siv| {
+                siv.pop_layer();
+            }),
+    ));
 }
 fn root_password_menu(s: &mut Cursive) {
     s.add_layer(Dialog::info("Root password menu not implemented."));
