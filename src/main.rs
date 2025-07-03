@@ -137,9 +137,7 @@ fn timezone_menu(s: &mut Cursive) {
             .content(ScrollView::new(
                 SelectView::<String>::new()
                     .h_align(HAlign::Center)
-                    .with_all(
-                        get_timezones()
-                    )
+                    .with_all(get_timezones())
                     .on_submit(|siv, val: &String| {
                         siv.with_user_data(|data: &mut RootData| {
                             data.timezone = Some(val.clone());
@@ -153,7 +151,25 @@ fn timezone_menu(s: &mut Cursive) {
     ));
 }
 fn root_password_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info("Root password menu not implemented."));
+    s.add_layer(wrap_with_shortcuts(
+        Dialog::new()
+            .title("Set Root Password")
+            .content(EditView::new().fixed_width(20).with_name("rootpass_edit"))
+            .button("Ok", |siv| {
+                let val = siv
+                    .call_on_name("rootpass_edit", |view: &mut EditView| {
+                        view.get_content().to_string()
+                    })
+                    .unwrap_or_default();
+                siv.with_user_data(|data: &mut RootData| {
+                    data.root_password = Some(val);
+                });
+                siv.pop_layer();
+            })
+            .button("Cancel", |siv| {
+                siv.pop_layer();
+            }),
+    ));
 }
 fn additional_users_menu(s: &mut Cursive) {
     s.add_layer(Dialog::info("Additional users menu not implemented."));
