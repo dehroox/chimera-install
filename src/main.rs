@@ -1,4 +1,4 @@
-use chimera_install::{get_locales, get_timezones, RootData};
+use chimera_install::{get_locales, get_timezones, RootData, User};
 use cursive::align::HAlign;
 use cursive::event::Key;
 use cursive::view::{Nameable, Resizable};
@@ -171,9 +171,84 @@ fn root_password_menu(s: &mut Cursive) {
             }),
     ));
 }
+
+// holyyyyyy shittt
 fn additional_users_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info("Additional users menu not implemented."));
+    s.add_layer(wrap_with_shortcuts(
+        Dialog::new()
+            .title("Add Additional User")
+            .content(
+                LinearLayout::vertical()
+                    .child(
+                        LinearLayout::horizontal()
+                            .child(Dialog::text("Username:"))
+                            .child(
+                                EditView::new()
+                                    .secret()
+                                    .with_name("user_name")
+                                    .fixed_width(20),
+                            ),
+                    )
+                    .child(
+                        LinearLayout::horizontal()
+                            .child(Dialog::text("Password:"))
+                            .child(
+                                EditView::new()
+                                    .secret()
+                                    .with_name("user_pass")
+                                    .fixed_width(20),
+                            ),
+                    )
+                    .child(
+                        LinearLayout::horizontal()
+                            .child(Dialog::text("Sudo privileges?"))
+                            .child(
+                                SelectView::new()
+                                    .popup()
+                                    .item("Yes", true)
+                                    .item("No", false)
+                                    .with_name("user_sudoer")
+                                    .fixed_width(10),
+                            ),
+                    ),
+            )
+            .button("Add", |siv| {
+                let name = siv
+                    .call_on_name("user_name", |view: &mut EditView| view.get_content())
+                    .unwrap_or_default()
+                    .to_string();
+
+                let pass = siv
+                    .call_on_name("user_pass", |view: &mut EditView| view.get_content())
+                    .unwrap_or_default()
+                    .to_string();
+
+                let sudoer = siv
+                    .call_on_name("user_sudoer", |view: &mut SelectView<bool>| {
+                        view.selection().map(|arc| *arc).unwrap_or(false) // THIS IS A MESS ?!?!?!
+                    })
+                    .unwrap_or(false);
+
+                if name.is_empty() || pass.is_empty() {
+                    siv.add_layer(Dialog::info("Username and password cannot be empty."));
+                    return;
+                }
+
+                siv.with_user_data(|data: &mut RootData| {
+                    if let Some(users) = &mut data.additional_users {
+                        users.push(User { name, pass, sudoer });
+                    } else {
+                        data.additional_users = Some(vec![User { name, pass, sudoer }]);
+                    }
+                });
+                siv.pop_layer();
+            })
+            .button("Cancel", |siv| {
+                siv.pop_layer();
+            }),
+    ));
 }
+
 fn partition_menu(s: &mut Cursive) {
     s.add_layer(Dialog::info("Partition menu not implemented."));
 }

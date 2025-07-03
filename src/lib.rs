@@ -6,7 +6,7 @@ pub struct RootData {
     pub locale: Option<String>,
     pub timezone: Option<String>,
     pub root_password: Option<String>,
-    pub additional_users: Option<Box<User>>,
+    pub additional_users: Option<Vec<User>>,
     pub partition: Option<bool>, // true = automatic partitioning, false = let user partition using cfdisk
     pub setup_bootloader: Option<Bootloader>,
     pub additional_repositories: Option<Box<String>>,
