@@ -1,4 +1,4 @@
-use chimera_install::{get_locales, get_timezones, RootData, User};
+use chimera_install::{get_locales, get_timezones, Bootloader, RootData, User};
 use cursive::align::HAlign;
 use cursive::event::Key;
 use cursive::view::{Nameable, Resizable};
@@ -274,7 +274,28 @@ fn partition_menu(s: &mut Cursive) {
 }
 
 fn setup_bootloader_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info("Setup bootloader menu not implemented."));
+    s.add_layer(wrap_with_shortcuts(
+        Dialog::new()
+            .title("Setup Bootloader")
+            .content(
+                SelectView::<Bootloader>::new()
+                    .h_align(HAlign::Center)
+                    .item("GRUB", Bootloader::Grub)
+                    .item("rEFInd", Bootloader::Refind)
+                    .item("systemd-boot", Bootloader::Systemd)
+                    .item("efistub", Bootloader::Efistub)
+                    .item("None", Bootloader::None)
+                    .on_submit(|siv, val| {
+                        siv.with_user_data(|data: &mut RootData| {
+                            data.setup_bootloader = Some(val.clone());
+                        });
+                        siv.pop_layer();
+                    }),
+            )
+            .button("Ok", |siv| {
+                siv.pop_layer();
+            }),
+    ));
 }
 
 fn additional_repositories_menu(s: &mut Cursive) {

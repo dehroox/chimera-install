@@ -17,6 +17,7 @@ pub struct User {
     pub sudoer: bool,
 }
 
+#[derive(Clone)]
 pub enum Bootloader {
     Grub,
     Refind,
