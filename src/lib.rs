@@ -1,16 +1,15 @@
 pub struct RootData {
-    pub source: bool, // true = network install, false = local install
-    pub hostname: String,
-    pub locale: String,
-    pub keyboard: String,
-    pub timezone: String,
-    pub root_password: String,
-    pub additional_users: Box<User>,
-    pub partition: bool, // true = automatic partitioning, false = let user partition using cfdisk
-    pub setup_bootloader: Bootloader,
-    pub additional_repositories: Box<String>
+    pub source: Option<bool>, // network or local
+    pub hostname: Option<String>,
+    pub locale: Option<String>,
+    pub keyboard: Option<String>,
+    pub timezone: Option<String>,
+    pub root_password: Option<String>,
+    pub additional_users: Option<Box<User>>,
+    pub partition: Option<bool>, // true = automatic partitioning, false = let user partition using cfdisk
+    pub setup_bootloader: Option<Bootloader>,
+    pub additional_repositories: Option<Box<String>>
 }
-
 pub struct User {
     pub name: String,
     pub pass: String,
