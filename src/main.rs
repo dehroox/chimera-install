@@ -249,17 +249,40 @@ fn additional_users_menu(s: &mut Cursive) {
     ));
 }
 
+// the way we handle partitions rn is very very bad, bleh, no support for dual boot, no support for custom partitioning, etc.
+// this should be the first thing to be improved after getting a working prototype.
 fn partition_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info("Partition menu not implemented."));
+    s.add_layer(wrap_with_shortcuts(
+        Dialog::new()
+            .title("Partitioning")
+            .content(
+                SelectView::<bool>::new()
+                    .h_align(HAlign::Center)
+                    .item("Automatic Partitioning + FS", true)
+                    .item("Use current partition scheme and current FS", false)
+                    .on_submit(|siv, val: &bool| {
+                        siv.with_user_data(|data: &mut RootData| {
+                            data.partition = Some(*val);
+                        });
+                        siv.pop_layer();
+                    }),
+            )
+            .button("Ok", |siv| {
+                siv.pop_layer();
+            }),
+    ));
 }
+
 fn setup_bootloader_menu(s: &mut Cursive) {
     s.add_layer(Dialog::info("Setup bootloader menu not implemented."));
 }
+
 fn additional_repositories_menu(s: &mut Cursive) {
     s.add_layer(Dialog::info(
         "Additional repositories menu not implemented.",
     ));
 }
+
 fn install_menu(s: &mut Cursive) {
     s.add_layer(Dialog::info("Install menu not implemented."));
 }
