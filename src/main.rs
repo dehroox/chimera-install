@@ -1,6 +1,7 @@
 use chimera_install::RootData;
 use cursive::align::HAlign;
-use cursive::views::{Dialog, LinearLayout, RadioGroup, SelectView};
+use cursive::view::{Nameable, Resizable};
+use cursive::views::{Dialog, EditView, LinearLayout, RadioGroup, SelectView};
 use cursive::{Cursive, CursiveExt};
 
 // generic type so rust doesnt complain :(
@@ -8,7 +9,7 @@ type MenuFn = fn(&mut Cursive);
 
 fn main() {
     let root_data = RootData {
-        source: None,                  // Network = true / Local = false
+        source: None, // Network = true / Local = false
         hostname: None,
         locale: None,                  // en_US.UTF-8/en_GB.UTF-8 etc. etc.
         keyboard: None,                // US/UK etc. etc.
@@ -76,8 +77,27 @@ fn source_menu(s: &mut Cursive) {
 }
 
 fn hostname_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info("Hostname menu not implemented."));
+    s.add_layer(
+        Dialog::new()
+            .title("Set Hostname")
+            .content(EditView::new().fixed_width(20).with_name("hostname_edit"))
+            .button("Ok", |siv| {
+                let val = siv
+                    .call_on_name("hostname_edit", |view: &mut EditView| {
+                        view.get_content().to_string()
+                    })
+                    .unwrap_or_default();
+                siv.with_user_data(|data: &mut RootData| {
+                    data.hostname = Some(val);
+                });
+                siv.pop_layer();
+            })
+            .button("Cancel", |siv| {
+                siv.pop_layer();
+            }),
+    );
 }
+
 fn locale_menu(s: &mut Cursive) {
     s.add_layer(Dialog::info("Locale menu not implemented."));
 }
