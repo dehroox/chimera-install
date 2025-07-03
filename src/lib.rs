@@ -1,3 +1,5 @@
+use std::fs::{read_to_string};
+
 pub struct RootData {
     pub source: Option<bool>, // network or local
     pub hostname: Option<String>,
@@ -22,4 +24,9 @@ pub enum Bootloader {
     Systemd,
     Efistub,
     None
+}
+
+pub fn get_locales() -> String {
+    return read_to_string("/usr/share/i18n/SUPPORTED")
+        .expect("Failed to read locales file");
 }

@@ -1,8 +1,11 @@
-use chimera_install::RootData;
+use chimera_install::{get_locales, RootData};
 use cursive::align::HAlign;
+use cursive::event::Key;
 use cursive::view::{Nameable, Resizable};
-use cursive::views::{Dialog, EditView, LinearLayout, RadioGroup, SelectView};
-use cursive::{Cursive, CursiveExt};
+use cursive::views::{
+    Dialog, EditView, LinearLayout, OnEventView, RadioGroup, ScrollView, SelectView,
+};
+use cursive::{Cursive, CursiveExt, View};
 
 // generic type so rust doesnt complain :(
 type MenuFn = fn(&mut Cursive);
@@ -25,7 +28,6 @@ fn main() {
 
     root.add_global_callback('q', |s| s.quit()); // quit with 'q', duh
 
-    // Use the generic MenuFn type for all menu functions
     let main_select = SelectView::<MenuFn>::new()
         .h_align(HAlign::Center)
         .item("Source", source_menu as MenuFn)
@@ -52,10 +54,18 @@ fn main() {
     root.run();
 }
 
+// common shortcuts for all submenus
+fn wrap_with_shortcuts<T: View>(f: T) -> OnEventView<T> {
+    return OnEventView::new(f).on_event(Key::Esc, |s| {
+        s.pop_layer();
+    }); // \1xb is the escape key
+}
+
+
 fn source_menu(s: &mut Cursive) {
     let mut group: RadioGroup<&bool> = RadioGroup::new();
 
-    s.add_layer(
+    s.add_layer(wrap_with_shortcuts(
         Dialog::new()
             .title("Source of bootstrapped packages")
             .content(
@@ -73,11 +83,11 @@ fn source_menu(s: &mut Cursive) {
             .button("Cancel", |siv| {
                 siv.pop_layer();
             }),
-    );
+    ));
 }
 
 fn hostname_menu(s: &mut Cursive) {
-    s.add_layer(
+    s.add_layer(wrap_with_shortcuts(
         Dialog::new()
             .title("Set Hostname")
             .content(EditView::new().fixed_width(20).with_name("hostname_edit"))
@@ -95,12 +105,34 @@ fn hostname_menu(s: &mut Cursive) {
             .button("Cancel", |siv| {
                 siv.pop_layer();
             }),
-    );
+    ));
 }
 
 fn locale_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info("Locale menu not implemented."));
+    s.add_layer(wrap_with_shortcuts(
+        Dialog::new()
+            .title("Select Locale")
+            .content(ScrollView::new(
+                SelectView::<String>::new()
+                    .h_align(HAlign::Center)
+                    .with_all(
+                        get_locales()
+                            .lines()
+                            .map(|line| (line.to_string(), line.to_string())),
+                    )
+                    .on_submit(|siv, val: &String| {
+                        siv.with_user_data(|data: &mut RootData| {
+                            data.locale = Some(val.clone());
+                        });
+                        siv.pop_layer();
+                    }),
+            ))
+            .button("Cancel", |siv| {
+                siv.pop_layer();
+            }),
+    ));
 }
+
 fn keyboard_menu(s: &mut Cursive) {
     s.add_layer(Dialog::info("Keyboard menu not implemented."));
 }
