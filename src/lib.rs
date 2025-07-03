@@ -4,7 +4,6 @@ pub struct RootData {
     pub source: Option<bool>, // network or local
     pub hostname: Option<String>,
     pub locale: Option<String>,
-    pub keyboard: Option<String>,
     pub timezone: Option<String>,
     pub root_password: Option<String>,
     pub additional_users: Option<Box<User>>,
@@ -26,6 +25,7 @@ pub enum Bootloader {
     None
 }
 
+// maybe hardcode it in if its confirmed to be consistent
 pub fn get_locales() -> String {
     return read_to_string("/usr/share/i18n/SUPPORTED")
         .expect("Failed to read locales file");

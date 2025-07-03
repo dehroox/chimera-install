@@ -15,7 +15,6 @@ fn main() {
         source: None, // Network = true / Local = false
         hostname: None,
         locale: None,                  // en_US.UTF-8/en_GB.UTF-8 etc. etc.
-        keyboard: None,                // US/UK etc. etc.
         timezone: None,                // Europe/London etc. etc.
         root_password: None,           // root password
         additional_users: None,        // see lib.rs
@@ -33,7 +32,6 @@ fn main() {
         .item("Source", source_menu as MenuFn)
         .item("Hostname", hostname_menu as MenuFn)
         .item("Locale", locale_menu as MenuFn)
-        .item("Keyboard", keyboard_menu as MenuFn)
         .item("Timezone", timezone_menu as MenuFn)
         .item("Root Password", root_password_menu as MenuFn)
         .item("Additional Users", additional_users_menu as MenuFn)
@@ -133,9 +131,6 @@ fn locale_menu(s: &mut Cursive) {
     ));
 }
 
-fn keyboard_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info("Keyboard menu not implemented."));
-}
 fn timezone_menu(s: &mut Cursive) {
     s.add_layer(Dialog::info("Timezone menu not implemented."));
 }
