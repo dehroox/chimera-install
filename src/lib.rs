@@ -9,15 +9,17 @@ pub struct RootData {
     pub additional_users: Option<Vec<User>>,
     pub partition: Option<bool>, // true = automatic partitioning, false = let user partition using cfdisk
     pub setup_bootloader: Option<Bootloader>,
-    pub additional_repositories: Option<Box<String>>,
+    pub additional_repositories: Option<Vec<String>>,
 }
+
+#[derive(Debug)]
 pub struct User {
     pub name: String,
     pub pass: String,
     pub sudoer: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Bootloader {
     Grub,
     Refind,

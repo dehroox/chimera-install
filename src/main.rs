@@ -299,11 +299,64 @@ fn setup_bootloader_menu(s: &mut Cursive) {
 }
 
 fn additional_repositories_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info(
-        "Additional repositories menu not implemented.",
+    let mut group: RadioGroup<String> = RadioGroup::new();
+    s.add_layer(wrap_with_shortcuts(
+        Dialog::new()
+            .title("Additional Repositories")
+            .content(
+                LinearLayout::vertical()
+                    .child(group.button("chimera-repo-user".to_string(), "Chimera User Repo"))
+                    .child(group.button(
+                        "chimera-repo-user-debug".to_string(),
+                        "Chimera Debug User Repo",
+                    ))
+                    .child(group.button(
+                        "chimera-repo-main-debug".to_string(),
+                        "Chimera Debug Main Repo",
+                    )),
+            )
+            .button("Ok", move |siv| {
+                let selected = group.selection();
+                siv.with_user_data(|data: &mut RootData| {
+                    if let Some(repos) = &mut data.additional_repositories {
+                        repos.push(selected.to_string());
+                    } else {
+                        data.additional_repositories = Some(vec![selected.to_string()]);
+                    }
+                });
+                siv.pop_layer();
+            })
+            .button("Cancel", |siv| {
+                siv.pop_layer();
+            }),
     ));
 }
 
 fn install_menu(s: &mut Cursive) {
-    s.add_layer(Dialog::info("Install menu not implemented."));
+    let info = s
+        .with_user_data(|data: &mut RootData| {
+            format!(
+                "Installation started with the following data:\n\n\
+                Source: {:?}\n\
+                Hostname: {:?}\n\
+                Locale: {:?}\n\
+                Timezone: {:?}\n\
+                Root Password: {:?}\n\
+                Additional Users: {:?}\n\
+                Partitioning: {:?}\n\
+                Setup Bootloader: {:?}\n\
+                Additional Repositories: {:?}",
+                data.source,
+                data.hostname,
+                data.locale,
+                data.timezone,
+                data.root_password,
+                data.additional_users,
+                data.partition,
+                data.setup_bootloader,
+                data.additional_repositories
+            )
+        })
+        .unwrap_or_else(|| "No data found.".to_string());
+    s.add_layer(Dialog::info(info));
 }
