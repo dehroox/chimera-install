@@ -41,7 +41,9 @@ pub enum Bootloader {
 }
 
 pub fn get_locales() -> String {
-    return read_to_string("/usr/share/i18/SUPPORTED").expect("Failed to read locales file");
+    return ["1", "2", "3", "4", "5", "6", "7", "8"]
+        .map(|i| i.to_owned())
+        .join("\n");
 }
 
 pub fn get_timezones() -> Vec<(String, String)> {
