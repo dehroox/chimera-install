@@ -1,5 +1,3 @@
-use std::fs::read_to_string;
-
 pub struct RootData {
     pub source: Option<Source>,
     pub hostname: Option<String>,
@@ -40,26 +38,4 @@ pub enum Bootloader {
     None,
 }
 
-pub fn get_locales() -> String {
-    return read_to_string("/usr/share/i18n/SUPPORTED").expect("Failed to read locales file");
-}
-
-pub fn get_timezones() -> Vec<(String, String)> {
-    let content =
-        read_to_string("/usr/share/zoneinfo/zone.tab").expect("Failed to read timezones file");
-
-    let mut timezones: Vec<(String, String)> = Vec::new();
-
-    for line in content.lines() {
-        if line.starts_with('#') || line.trim().is_empty() {
-            continue;
-        }
-        if let Some(tz) = line.split_whitespace().nth(2) {
-            let stringed = tz.to_string();
-            timezones.push((stringed.clone(), stringed));
-        }
-    }
-
-    timezones.sort();
-    return timezones;
-}
+pub type MenuCallback = fn(&mut cursive::Cursive);
