@@ -6,10 +6,13 @@ use crate::helpers::{
 use crate::enums::{Bootloader, MenuCallback, PartitionType, RootData, Source, User};
 use cursive::align::HAlign;
 use cursive::view::{Nameable, Resizable};
-use cursive::views::{Dialog, EditView, LinearLayout, RadioGroup, SelectView};
+use cursive::views::{Dialog, EditView, LinearLayout, RadioGroup, SelectView, TextView};
 use cursive::Cursive;
 
-pub fn main_app() -> Cursive {
+// prepare for the worst code of all time
+// cursive makes me insaneeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+
+pub fn main_app(install_callback: fn(&mut Cursive)) -> Cursive {
     let initial_root_data = RootData {
         source: None,
         hostname: None,
@@ -26,22 +29,66 @@ pub fn main_app() -> Cursive {
 
     cursive_app.add_global_callback('q', |s| s.quit());
 
-    let main_menu_select_view = SelectView::<MenuCallback>::new()
-        .h_align(HAlign::Center)
-        .item("Source", source_menu as MenuCallback)
-        .item("Hostname", hostname_menu as MenuCallback)
-        .item("Locale", locale_menu as MenuCallback)
-        .item("Timezone", timezone_menu as MenuCallback)
-        .item("Root Password", root_password_menu as MenuCallback)
-        .item("Additional Users", additional_users_menu as MenuCallback)
-        .item("Partitioning", partition_menu as MenuCallback)
-        .item("Setup Bootloader", setup_bootloader_menu as MenuCallback)
-        .item(
-            "Additional Repositories",
-            additional_repositories_menu as MenuCallback,
-        )
-        .item("Install", install_menu as MenuCallback)
-        .on_submit(|cursive, callback| callback(cursive));
+    let main_menu_select_view = Dialog::around(
+        SelectView::<MenuCallback>::new()
+            .h_align(HAlign::Center)
+            .item("Source", source_menu as MenuCallback)
+            .item("Hostname", hostname_menu as MenuCallback)
+            .item("Locale", locale_menu as MenuCallback)
+            .item("Timezone", timezone_menu as MenuCallback)
+            .item("Root Password", root_password_menu as MenuCallback)
+            .item("Additional Users", additional_users_menu as MenuCallback)
+            .item("Partitioning", partition_menu as MenuCallback)
+            .item("Setup Bootloader", setup_bootloader_menu as MenuCallback)
+            .item(
+                "Additional Repositories",
+                additional_repositories_menu as MenuCallback,
+            )
+            .on_submit(|cursive, callback| callback(cursive)),
+    )
+    .button("Install", move |cursive| {
+        // tbh idk what move does but it works, this holds true for all the moves
+        cursive.pop_layer();
+        let installation_summary = cursive
+            .with_user_data(|root_data: &mut RootData| {
+                format!(
+                    "Installation started with the following data:\n\n\
+                Source: {:?}\n\
+                Hostname: {:?}\n\
+                Locale: {:?}\n\
+                Timezone: {:?}\n\
+                Root Password: {:?}\n\
+                Additional Users: {:?}\n\
+                Partitioning: {:?}\n\
+                Setup Bootloader: {:?}\n\
+                Additional Repositories: {:?}",
+                    root_data.source,
+                    root_data.hostname,
+                    root_data.locale,
+                    root_data.timezone,
+                    root_data.root_password,
+                    root_data.additional_users,
+                    root_data.partition,
+                    root_data.setup_bootloader,
+                    root_data.additional_repositories
+                )
+            })
+            .unwrap_or_else(|| "No data found.".to_owned());
+        cursive.add_layer(
+            Dialog::new()
+                .content(TextView::new(
+                    installation_summary + "\n\n Are you sure you want to proceed?",
+                ))
+                .title("Installation Summary")
+                .button("Start Installation", move |cursive| {
+                    cursive.pop_layer();
+                    install_callback(cursive);
+                })
+                .button("Cancel", |cursive| {
+                    cursive.pop_layer();
+                }),
+        );
+    });
 
     cursive_app.add_layer(Dialog::around(main_menu_select_view).title("Chimera Linux Installer"));
 
@@ -270,33 +317,4 @@ pub fn additional_repositories_menu(cursive: &mut Cursive) {
                 cursive.pop_layer();
             }),
     ));
-}
-
-pub fn install_menu(cursive: &mut Cursive) {
-    let installation_summary = cursive
-        .with_user_data(|root_data: &mut RootData| {
-            format!(
-                "Installation started with the following data:\n\n\
-                Source: {:?}\n\
-                Hostname: {:?}\n\
-                Locale: {:?}\n\
-                Timezone: {:?}\n\
-                Root Password: {:?}\n\
-                Additional Users: {:?}\n\
-                Partitioning: {:?}\n\
-                Setup Bootloader: {:?}\n\
-                Additional Repositories: {:?}",
-                root_data.source,
-                root_data.hostname,
-                root_data.locale,
-                root_data.timezone,
-                root_data.root_password,
-                root_data.additional_users,
-                root_data.partition,
-                root_data.setup_bootloader,
-                root_data.additional_repositories
-            )
-        })
-        .unwrap_or_else(|| "No data found.".to_owned());
-    cursive.add_layer(Dialog::info(installation_summary));
 }

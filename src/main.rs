@@ -8,8 +8,12 @@ mod menus;
 use crate::menus::main_app;
 use cursive::CursiveExt;
 
+fn begin_installation(cursive: &mut cursive::Cursive) {
+    cursive.add_layer(cursive::views::Dialog::info("Installation started!"));
+}
+
 fn main() {
-    let mut app = main_app();
+    let mut app = main_app(begin_installation);
 
     app.run();
 }
