@@ -1,4 +1,6 @@
-use chimera_install::{get_locales, get_timezones, Bootloader, RootData, User};
+use chimera_install::{
+    get_locales, get_timezones, Bootloader, PartitionType, RootData, Source, User,
+};
 use cursive::align::HAlign;
 use cursive::event::Key;
 use cursive::view::{Nameable, Resizable};
@@ -109,18 +111,20 @@ where
 // MENUS
 
 fn source_menu(s: &mut Cursive) {
-    let mut group: RadioGroup<&bool> = RadioGroup::new();
+    let mut group: RadioGroup<Source> = RadioGroup::new();
     s.add_layer(wrap_with_shortcuts(
         Dialog::new()
             .title("Source of bootstrapped packages")
             .content(
                 LinearLayout::vertical()
-                    .child(group.button(&true, "Network"))
-                    .child(group.button(&false, "Local")),
+                    .child(group.button(Source::Network, "Network"))
+                    .child(group.button(Source::Local, "Local")),
             )
             .button("Ok", move |siv| {
                 let selected = group.selection();
-                siv.with_user_data(|data: &mut RootData| data.source = Some(**selected));
+                siv.with_user_data(|data: &mut RootData| {
+                    data.source = Some((*selected).to_owned())
+                });
                 siv.pop_layer();
             })
             .button("Cancel", |siv| {
@@ -225,10 +229,13 @@ fn additional_users_menu(s: &mut Cursive) {
 
 fn partition_menu(s: &mut Cursive) {
     let options = vec![
-        ("Automatic Partitioning + FS".to_owned(), true),
+        (
+            "Automatic Partitioning + FS".to_owned(),
+            PartitionType::Auto,
+        ),
         (
             "Use current partition scheme and current FS".to_owned(),
-            false,
+            PartitionType::Manual,
         ),
     ];
     single_select_menu(s, "Partitioning", options, |siv, val| {

@@ -1,15 +1,27 @@
 use std::fs::read_to_string;
 
 pub struct RootData {
-    pub source: Option<bool>, // network or local
+    pub source: Option<Source>,
     pub hostname: Option<String>,
     pub locale: Option<String>,
     pub timezone: Option<String>,
     pub root_password: Option<String>,
     pub additional_users: Option<Vec<User>>,
-    pub partition: Option<bool>, // true = automatic partitioning, false = let user partition using cfdisk
+    pub partition: Option<PartitionType>,
     pub setup_bootloader: Option<Bootloader>,
     pub additional_repositories: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Source {
+    Network,
+    Local,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum PartitionType {
+    Auto,
+    Manual,
 }
 
 #[derive(Debug)]
