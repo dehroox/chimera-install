@@ -95,17 +95,18 @@ where
             .title(dialog_title)
             .content(
                 EditView::new()
+                    .on_submit(move |cursive, val| {
+                        if !val.is_empty() {
+                            on_ok(cursive, val.to_string());
+                        } else {
+                            cursive.add_layer(Dialog::info("Input cannot be empty."));
+                            return;
+                        }
+                        cursive.pop_layer();
+                    })
                     .fixed_width(20)
-                    .with_name(input_name.to_owned()),
+                    .with_name(input_name),
             )
-            .button("Ok", move |cursive| {
-                if let Some(input_value) =
-                    cursive.call_on_name(&input_name, |view: &mut EditView| view.get_content())
-                {
-                    on_ok(cursive, input_value.to_string());
-                }
-                cursive.pop_layer();
-            })
             .button("Cancel", |cursive| {
                 cursive.pop_layer();
             }),
