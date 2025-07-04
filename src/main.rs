@@ -7,7 +7,9 @@ use chimera_install::{
 use cursive::align::HAlign;
 use cursive::event::Key;
 use cursive::view::{Nameable, Resizable};
-use cursive::views::{Dialog, EditView, LinearLayout, OnEventView, RadioGroup, SelectView};
+use cursive::views::{
+    Dialog, EditView, LinearLayout, OnEventView, RadioGroup, ScrollView, SelectView,
+};
 use cursive::{Cursive, CursiveExt, View};
 
 type MenuCallback = fn(&mut Cursive);
@@ -73,14 +75,14 @@ where
         cursive.pop_layer();
     });
 
-    cursive.add_layer(wrap_view_with_shortcuts(
+    cursive.add_layer(wrap_view_with_shortcuts(ScrollView::new(
         Dialog::new()
             .title(dialog_title)
             .content(select_view)
             .button("Cancel", |cursive| {
                 cursive.pop_layer();
             }),
-    ));
+    )));
 }
 
 fn titled_input_row(label: &str, input_name: &str) -> LinearLayout {
