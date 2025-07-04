@@ -123,7 +123,7 @@ fn source_menu(s: &mut Cursive) {
             .button("Ok", move |siv| {
                 let selected = group.selection();
                 siv.with_user_data(|data: &mut RootData| {
-                    data.source = Some((*selected).to_owned())
+                    data.source = Some((*selected).to_owned());
                 });
                 siv.pop_layer();
             })
