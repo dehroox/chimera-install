@@ -323,11 +323,14 @@ fn additional_repositories_menu(cursive: &mut Cursive) {
             )
             .button("Ok", move |cursive| {
                 let selected_repository = repository_radio_group.selection();
+
                 cursive.with_user_data(|root_data: &mut RootData| {
-                    root_data
-                        .additional_repositories
-                        .get_or_insert_with(Vec::new)
-                        .push(selected_repository.to_string());
+                    let additional_repositories =
+                        root_data.additional_repositories.get_or_insert_with(Vec::new);
+
+                    if !additional_repositories.contains(&selected_repository) {
+                        additional_repositories.push(selected_repository.to_string());
+                    }
                 });
                 cursive.pop_layer();
             })
