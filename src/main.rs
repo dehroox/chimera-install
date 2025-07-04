@@ -2,9 +2,7 @@ use chimera_install::{get_locales, get_timezones, Bootloader, RootData, User};
 use cursive::align::HAlign;
 use cursive::event::Key;
 use cursive::view::{Nameable, Resizable};
-use cursive::views::{
-    Dialog, EditView, LinearLayout, OnEventView, RadioGroup, ScrollView, SelectView,
-};
+use cursive::views::{Dialog, EditView, LinearLayout, OnEventView, RadioGroup, SelectView};
 use cursive::{Cursive, CursiveExt, View};
 
 // generic type so rust doesnt complain :(
@@ -12,20 +10,20 @@ type MenuFn = fn(&mut Cursive);
 
 fn main() {
     let root_data = RootData {
-        source: None, // Network = true / Local = false
+        source: None,
         hostname: None,
-        locale: None,                  // en_US.UTF-8/en_GB.UTF-8 etc. etc.
-        timezone: None,                // Europe/London etc. etc.
-        root_password: None,           // root password
-        additional_users: None,        // see lib.rs
-        partition: None,               // see lib.rs
-        setup_bootloader: None,        // grub, refind, systemd-boot, efistub, none
-        additional_repositories: None, // see lib.rs
+        locale: None,
+        timezone: None,
+        root_password: None,
+        additional_users: None,
+        partition: None,
+        setup_bootloader: None,
+        additional_repositories: None,
     };
     let mut root = Cursive::new();
-    root.set_user_data(root_data); // store root_data in the root
+    root.set_user_data(root_data);
 
-    root.add_global_callback('q', |s| s.quit()); // quit with 'q', duh
+    root.add_global_callback('q', |s| s.quit());
 
     let main_select = SelectView::<MenuFn>::new()
         .h_align(HAlign::Center)
@@ -42,26 +40,76 @@ fn main() {
             additional_repositories_menu as MenuFn,
         )
         .item("Install", install_menu as MenuFn)
-        .on_submit(|s, val| {
-            val(s);
-        });
+        .on_submit(|s, val| val(s));
 
-    let main_view = Dialog::around(main_select).title("Chimera Linux Installer");
-
-    root.add_layer(main_view);
+    root.add_layer(Dialog::around(main_select).title("Chimera Linux Installer"));
     root.run();
 }
 
-// common shortcuts for all submenus
+// HELPERS AND REUSABLES
+
 fn wrap_with_shortcuts<T: View>(f: T) -> OnEventView<T> {
-    return OnEventView::new(f).on_event(Key::Esc, |s| {
+    OnEventView::new(f).on_event(Key::Esc, |s| {
         s.pop_layer();
-    }); // \1xb is the escape key
+    })
 }
+
+fn single_select_menu<T, I, F>(s: &mut Cursive, title: &str, items: I, on_select: F)
+where
+    T: Clone + Send + Sync + 'static,
+    I: IntoIterator<Item = (String, T)>,
+    F: Fn(&mut Cursive, &T) + Send + Sync + 'static,
+{
+    let mut select = SelectView::<T>::new().h_align(HAlign::Center);
+    for (label, value) in items {
+        select.add_item(label, value);
+    }
+    let select = select.on_submit(move |siv: &mut Cursive, val| {
+        on_select(siv, val);
+        siv.pop_layer();
+    });
+
+    s.add_layer(wrap_with_shortcuts(
+        Dialog::new()
+            .title(title)
+            .content(select)
+            .button("Cancel", |siv| {
+                siv.pop_layer();
+            }),
+    ));
+}
+
+fn titled_input(title: &str, name: &str) -> LinearLayout {
+    LinearLayout::horizontal()
+        .child(Dialog::text(title))
+        .child(EditView::new().with_name(name).fixed_width(20))
+}
+
+fn input_dialog<F>(s: &mut Cursive, title: &str, name: String, on_ok: F)
+where
+    F: Fn(&mut Cursive, String) + Send + Sync + 'static,
+{
+    s.add_layer(wrap_with_shortcuts(
+        Dialog::new()
+            .title(title)
+            .content(EditView::new().fixed_width(20).with_name(name.to_owned()))
+            .button("Ok", move |siv| {
+                if let Some(val) = siv.call_on_name(&name, |view: &mut EditView| view.get_content())
+                {
+                    on_ok(siv, val.to_string());
+                }
+                siv.pop_layer();
+            })
+            .button("Cancel", |siv| {
+                siv.pop_layer();
+            }),
+    ));
+}
+
+// MENUS
 
 fn source_menu(s: &mut Cursive) {
     let mut group: RadioGroup<&bool> = RadioGroup::new();
-
     s.add_layer(wrap_with_shortcuts(
         Dialog::new()
             .title("Source of bootstrapped packages")
@@ -72,9 +120,7 @@ fn source_menu(s: &mut Cursive) {
             )
             .button("Ok", move |siv| {
                 let selected = group.selection();
-                siv.with_user_data(|data: &mut RootData| {
-                    data.source = Some(**selected);
-                });
+                siv.with_user_data(|data: &mut RootData| data.source = Some(**selected));
                 siv.pop_layer();
             })
             .button("Cancel", |siv| {
@@ -84,134 +130,64 @@ fn source_menu(s: &mut Cursive) {
 }
 
 fn hostname_menu(s: &mut Cursive) {
-    s.add_layer(wrap_with_shortcuts(
-        Dialog::new()
-            .title("Set Hostname")
-            .content(EditView::new().fixed_width(20).with_name("hostname_edit"))
-            .button("Ok", |siv| {
-                let val = siv
-                    .call_on_name("hostname_edit", |view: &mut EditView| {
-                        view.get_content().to_string()
-                    })
-                    .unwrap_or_default();
-                siv.with_user_data(|data: &mut RootData| {
-                    data.hostname = Some(val);
-                });
-                siv.pop_layer();
-            })
-            .button("Cancel", |siv| {
-                siv.pop_layer();
-            }),
-    ));
+    input_dialog(s, "Set Hostname", "hostname_edit".to_owned(), |siv, val| {
+        siv.with_user_data(|data: &mut RootData| {
+            data.hostname = Some(val);
+        });
+    });
 }
 
 fn locale_menu(s: &mut Cursive) {
-    s.add_layer(wrap_with_shortcuts(
-        Dialog::new()
-            .title("Select Locale")
-            .content(ScrollView::new(
-                SelectView::<String>::new()
-                    .h_align(HAlign::Center)
-                    .with_all(
-                        get_locales()
-                            .lines()
-                            .map(|line| (line.to_string(), line.to_string())),
-                    )
-                    .on_submit(|siv, val: &String| {
-                        siv.with_user_data(|data: &mut RootData| {
-                            data.locale = Some(val.clone());
-                        });
-                        siv.pop_layer();
-                    }),
-            ))
-            .button("Cancel", |siv| {
-                siv.pop_layer();
-            }),
-    ));
+    let locales = get_locales()
+        .lines()
+        .map(|line| (line.to_owned(), line.to_owned()))
+        .collect::<Vec<_>>();
+    single_select_menu(s, "Select Locale", locales, |siv, val| {
+        siv.with_user_data(|data: &mut RootData| data.locale = Some(val.to_owned()));
+    });
 }
 
 fn timezone_menu(s: &mut Cursive) {
-    s.add_layer(wrap_with_shortcuts(
-        Dialog::new()
-            .title("Select Timezone")
-            .content(ScrollView::new(
-                SelectView::<String>::new()
-                    .h_align(HAlign::Center)
-                    .with_all(get_timezones())
-                    .on_submit(|siv, val: &String| {
-                        siv.with_user_data(|data: &mut RootData| {
-                            data.timezone = Some(val.clone());
-                        });
-                        siv.pop_layer();
-                    }),
-            ))
-            .button("Cancel", |siv| {
-                siv.pop_layer();
-            }),
-    ));
-}
-fn root_password_menu(s: &mut Cursive) {
-    s.add_layer(wrap_with_shortcuts(
-        Dialog::new()
-            .title("Set Root Password")
-            .content(EditView::new().fixed_width(20).with_name("rootpass_edit"))
-            .button("Ok", |siv| {
-                let val = siv
-                    .call_on_name("rootpass_edit", |view: &mut EditView| {
-                        view.get_content().to_string()
-                    })
-                    .unwrap_or_default();
-                siv.with_user_data(|data: &mut RootData| {
-                    data.root_password = Some(val);
-                });
-                siv.pop_layer();
-            })
-            .button("Cancel", |siv| {
-                siv.pop_layer();
-            }),
-    ));
+    let timezones = get_timezones();
+    single_select_menu(s, "Select Timezone", timezones, |siv, val| {
+        siv.with_user_data(|data: &mut RootData| data.timezone = Some(val.to_owned()));
+    });
 }
 
-// holyyyyyy shittt
+fn root_password_menu(s: &mut Cursive) {
+    input_dialog(
+        s,
+        "Set Root Password",
+        "rootpass_edit".to_owned(),
+        |siv, val| {
+            siv.with_user_data(|data: &mut RootData| {
+                data.root_password = Some(val);
+            });
+        },
+    );
+}
+
 fn additional_users_menu(s: &mut Cursive) {
+    let content = LinearLayout::vertical()
+        .child(titled_input("Username:", "user_name"))
+        .child(titled_input("Password:", "user_pass"))
+        .child(
+            LinearLayout::horizontal()
+                .child(Dialog::text("Sudo privileges?"))
+                .child(
+                    SelectView::new()
+                        .popup()
+                        .item("Yes", true)
+                        .item("No", false)
+                        .with_name("user_sudoer")
+                        .fixed_width(10),
+                ),
+        );
+
     s.add_layer(wrap_with_shortcuts(
         Dialog::new()
             .title("Add Additional User")
-            .content(
-                LinearLayout::vertical()
-                    .child(
-                        LinearLayout::horizontal()
-                            .child(Dialog::text("Username:"))
-                            .child(
-                                EditView::new()
-                                    .secret()
-                                    .with_name("user_name")
-                                    .fixed_width(20),
-                            ),
-                    )
-                    .child(
-                        LinearLayout::horizontal()
-                            .child(Dialog::text("Password:"))
-                            .child(
-                                EditView::new()
-                                    .secret()
-                                    .with_name("user_pass")
-                                    .fixed_width(20),
-                            ),
-                    )
-                    .child(
-                        LinearLayout::horizontal()
-                            .child(Dialog::text("Sudo privileges?"))
-                            .child(
-                                SelectView::new()
-                                    .popup()
-                                    .item("Yes", true)
-                                    .item("No", false)
-                                    .with_name("user_sudoer")
-                                    .fixed_width(10),
-                            ),
-                    ),
-            )
+            .content(content)
             .button("Add", |siv| {
                 let name = siv
                     .call_on_name("user_name", |view: &mut EditView| view.get_content())
@@ -225,7 +201,7 @@ fn additional_users_menu(s: &mut Cursive) {
 
                 let sudoer = siv
                     .call_on_name("user_sudoer", |view: &mut SelectView<bool>| {
-                        view.selection().map(|arc| *arc).unwrap_or(false) // THIS IS A MESS ?!?!?!
+                        view.selection().as_deref().copied().unwrap_or(false)
                     })
                     .unwrap_or(false);
 
@@ -235,11 +211,9 @@ fn additional_users_menu(s: &mut Cursive) {
                 }
 
                 siv.with_user_data(|data: &mut RootData| {
-                    if let Some(users) = &mut data.additional_users {
-                        users.push(User { name, pass, sudoer });
-                    } else {
-                        data.additional_users = Some(vec![User { name, pass, sudoer }]);
-                    }
+                    data.additional_users
+                        .get_or_insert_with(Vec::new)
+                        .push(User { name, pass, sudoer });
                 });
                 siv.pop_layer();
             })
@@ -249,53 +223,30 @@ fn additional_users_menu(s: &mut Cursive) {
     ));
 }
 
-// the way we handle partitions rn is very very bad, bleh, no support for dual boot, no support for custom partitioning, etc.
-// this should be the first thing to be improved after getting a working prototype.
 fn partition_menu(s: &mut Cursive) {
-    s.add_layer(wrap_with_shortcuts(
-        Dialog::new()
-            .title("Partitioning")
-            .content(
-                SelectView::<bool>::new()
-                    .h_align(HAlign::Center)
-                    .item("Automatic Partitioning + FS", true)
-                    .item("Use current partition scheme and current FS", false)
-                    .on_submit(|siv, val: &bool| {
-                        siv.with_user_data(|data: &mut RootData| {
-                            data.partition = Some(*val);
-                        });
-                        siv.pop_layer();
-                    }),
-            )
-            .button("Ok", |siv| {
-                siv.pop_layer();
-            }),
-    ));
+    let options = vec![
+        ("Automatic Partitioning + FS".to_owned(), true),
+        (
+            "Use current partition scheme and current FS".to_owned(),
+            false,
+        ),
+    ];
+    single_select_menu(s, "Partitioning", options, |siv, val| {
+        siv.with_user_data(|data: &mut RootData| data.partition = Some(*val));
+    });
 }
 
 fn setup_bootloader_menu(s: &mut Cursive) {
-    s.add_layer(wrap_with_shortcuts(
-        Dialog::new()
-            .title("Setup Bootloader")
-            .content(
-                SelectView::<Bootloader>::new()
-                    .h_align(HAlign::Center)
-                    .item("GRUB", Bootloader::Grub)
-                    .item("rEFInd", Bootloader::Refind)
-                    .item("systemd-boot", Bootloader::Systemd)
-                    .item("efistub", Bootloader::Efistub)
-                    .item("None", Bootloader::None)
-                    .on_submit(|siv, val| {
-                        siv.with_user_data(|data: &mut RootData| {
-                            data.setup_bootloader = Some(val.clone());
-                        });
-                        siv.pop_layer();
-                    }),
-            )
-            .button("Ok", |siv| {
-                siv.pop_layer();
-            }),
-    ));
+    let options = vec![
+        ("GRUB".to_owned(), Bootloader::Grub),
+        ("rEFInd".to_owned(), Bootloader::Refind),
+        ("systemd-boot".to_owned(), Bootloader::Systemd),
+        ("efistub".to_owned(), Bootloader::Efistub),
+        ("None".to_owned(), Bootloader::None),
+    ];
+    single_select_menu(s, "Setup Bootloader", options, |siv, val| {
+        siv.with_user_data(|data: &mut RootData| data.setup_bootloader = Some(val.to_owned()));
+    });
 }
 
 fn additional_repositories_menu(s: &mut Cursive) {
@@ -305,24 +256,22 @@ fn additional_repositories_menu(s: &mut Cursive) {
             .title("Additional Repositories")
             .content(
                 LinearLayout::vertical()
-                    .child(group.button("chimera-repo-user".to_string(), "Chimera User Repo"))
+                    .child(group.button("chimera-repo-user".to_owned(), "Chimera User Repo"))
                     .child(group.button(
-                        "chimera-repo-user-debug".to_string(),
+                        "chimera-repo-user-debug".to_owned(),
                         "Chimera Debug User Repo",
                     ))
                     .child(group.button(
-                        "chimera-repo-main-debug".to_string(),
+                        "chimera-repo-main-debug".to_owned(),
                         "Chimera Debug Main Repo",
                     )),
             )
             .button("Ok", move |siv| {
                 let selected = group.selection();
                 siv.with_user_data(|data: &mut RootData| {
-                    if let Some(repos) = &mut data.additional_repositories {
-                        repos.push(selected.to_string());
-                    } else {
-                        data.additional_repositories = Some(vec![selected.to_string()]);
-                    }
+                    data.additional_repositories
+                        .get_or_insert_with(Vec::new)
+                        .push(selected.to_string());
                 });
                 siv.pop_layer();
             })
@@ -357,6 +306,6 @@ fn install_menu(s: &mut Cursive) {
                 data.additional_repositories
             )
         })
-        .unwrap_or_else(|| "No data found.".to_string());
+        .unwrap_or_else(|| "No data found.".to_owned());
     s.add_layer(Dialog::info(info));
 }
