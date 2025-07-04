@@ -93,9 +93,14 @@ where
     cursive.add_layer(wrap_view_with_shortcuts(
         Dialog::new()
             .title(dialog_title)
-            .content(EditView::new().fixed_width(20).with_name(input_name.to_owned()))
+            .content(
+                EditView::new()
+                    .fixed_width(20)
+                    .with_name(input_name.to_owned()),
+            )
             .button("Ok", move |cursive| {
-                if let Some(input_value) = cursive.call_on_name(&input_name, |view: &mut EditView| view.get_content())
+                if let Some(input_value) =
+                    cursive.call_on_name(&input_name, |view: &mut EditView| view.get_content())
                 {
                     on_ok(cursive, input_value.to_string());
                 }
@@ -133,11 +138,16 @@ fn source_menu(cursive: &mut Cursive) {
 }
 
 fn hostname_menu(cursive: &mut Cursive) {
-    input_dialog(cursive, "Set Hostname", "hostname_edit".to_owned(), |cursive, hostname_value| {
-        cursive.with_user_data(|root_data: &mut RootData| {
-            root_data.hostname = Some(hostname_value);
-        });
-    });
+    input_dialog(
+        cursive,
+        "Set Hostname",
+        "hostname_edit".to_owned(),
+        |cursive, hostname_value| {
+            cursive.with_user_data(|root_data: &mut RootData| {
+                root_data.hostname = Some(hostname_value);
+            });
+        },
+    );
 }
 
 fn locale_menu(cursive: &mut Cursive) {
@@ -145,16 +155,30 @@ fn locale_menu(cursive: &mut Cursive) {
         .lines()
         .map(|line| (line.to_owned(), line.to_owned()))
         .collect::<Vec<_>>();
-    single_select_menu(cursive, "Select Locale", available_locales, |cursive, selected_locale| {
-        cursive.with_user_data(|root_data: &mut RootData| root_data.locale = Some(selected_locale.to_owned()));
-    });
+    single_select_menu(
+        cursive,
+        "Select Locale",
+        available_locales,
+        |cursive, selected_locale| {
+            cursive.with_user_data(|root_data: &mut RootData| {
+                root_data.locale = Some(selected_locale.to_owned())
+            });
+        },
+    );
 }
 
 fn timezone_menu(cursive: &mut Cursive) {
     let available_timezones = get_timezones();
-    single_select_menu(cursive, "Select Timezone", available_timezones, |cursive, selected_timezone| {
-        cursive.with_user_data(|root_data: &mut RootData| root_data.timezone = Some(selected_timezone.to_owned()));
-    });
+    single_select_menu(
+        cursive,
+        "Select Timezone",
+        available_timezones,
+        |cursive, selected_timezone| {
+            cursive.with_user_data(|root_data: &mut RootData| {
+                root_data.timezone = Some(selected_timezone.to_owned())
+            });
+        },
+    );
 }
 
 fn root_password_menu(cursive: &mut Cursive) {
@@ -214,9 +238,14 @@ fn additional_users_menu(cursive: &mut Cursive) {
                 }
 
                 cursive.with_user_data(|root_data: &mut RootData| {
-                    root_data.additional_users
+                    root_data
+                        .additional_users
                         .get_or_insert_with(Vec::new)
-                        .push(User { name: username, pass: password, sudoer: is_sudoer });
+                        .push(User {
+                            name: username,
+                            pass: password,
+                            sudoer: is_sudoer,
+                        });
                 });
                 cursive.pop_layer();
             })
@@ -237,9 +266,16 @@ fn partition_menu(cursive: &mut Cursive) {
             PartitionType::Manual,
         ),
     ];
-    single_select_menu(cursive, "Partitioning", partition_options, |cursive, selected_partition_type| {
-        cursive.with_user_data(|root_data: &mut RootData| root_data.partition = Some(*selected_partition_type));
-    });
+    single_select_menu(
+        cursive,
+        "Partitioning",
+        partition_options,
+        |cursive, selected_partition_type| {
+            cursive.with_user_data(|root_data: &mut RootData| {
+                root_data.partition = Some(*selected_partition_type)
+            });
+        },
+    );
 }
 
 fn setup_bootloader_menu(cursive: &mut Cursive) {
@@ -250,9 +286,16 @@ fn setup_bootloader_menu(cursive: &mut Cursive) {
         ("efistub".to_owned(), Bootloader::Efistub),
         ("None".to_owned(), Bootloader::None),
     ];
-    single_select_menu(cursive, "Setup Bootloader", bootloader_options, |cursive, selected_bootloader| {
-        cursive.with_user_data(|root_data: &mut RootData| root_data.setup_bootloader = Some(selected_bootloader.to_owned()));
-    });
+    single_select_menu(
+        cursive,
+        "Setup Bootloader",
+        bootloader_options,
+        |cursive, selected_bootloader| {
+            cursive.with_user_data(|root_data: &mut RootData| {
+                root_data.setup_bootloader = Some(selected_bootloader.to_owned())
+            });
+        },
+    );
 }
 
 fn additional_repositories_menu(cursive: &mut Cursive) {
@@ -262,7 +305,10 @@ fn additional_repositories_menu(cursive: &mut Cursive) {
             .title("Additional Repositories")
             .content(
                 LinearLayout::vertical()
-                    .child(repository_radio_group.button("chimera-repo-user".to_owned(), "Chimera User Repo"))
+                    .child(
+                        repository_radio_group
+                            .button("chimera-repo-user".to_owned(), "Chimera User Repo"),
+                    )
                     .child(repository_radio_group.button(
                         "chimera-repo-user-debug".to_owned(),
                         "Chimera Debug User Repo",
@@ -275,7 +321,8 @@ fn additional_repositories_menu(cursive: &mut Cursive) {
             .button("Ok", move |cursive| {
                 let selected_repository = repository_radio_group.selection();
                 cursive.with_user_data(|root_data: &mut RootData| {
-                    root_data.additional_repositories
+                    root_data
+                        .additional_repositories
                         .get_or_insert_with(Vec::new)
                         .push(selected_repository.to_string());
                 });
