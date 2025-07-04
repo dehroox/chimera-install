@@ -90,23 +90,20 @@ fn input_dialog<F>(cursive: &mut Cursive, dialog_title: &str, input_name: String
 where
     F: Fn(&mut Cursive, String) + Send + Sync + 'static,
 {
+    let edit = EditView::new().on_submit(move |cursive, val| {
+        if !val.is_empty() {
+            on_ok(cursive, val.to_string());
+        } else {
+            cursive.add_layer(Dialog::info("Input cannot be empty."));
+            return;
+        }
+        cursive.pop_layer();
+    });
+
     cursive.add_layer(wrap_view_with_shortcuts(
         Dialog::new()
             .title(dialog_title)
-            .content(
-                EditView::new()
-                    .on_submit(move |cursive, val| {
-                        if !val.is_empty() {
-                            on_ok(cursive, val.to_string());
-                        } else {
-                            cursive.add_layer(Dialog::info("Input cannot be empty."));
-                            return;
-                        }
-                        cursive.pop_layer();
-                    })
-                    .fixed_width(20)
-                    .with_name(input_name),
-            )
+            .content(edit.fixed_width(20).with_name(&input_name))
             .button("Cancel", |cursive| {
                 cursive.pop_layer();
             }),
