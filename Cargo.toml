@@ -7,3 +7,11 @@ edition = "2021"
 
 [dependencies]
 cursive = "*"
+mimalloc = "0.1.47"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+strip = "symbols"
+panic = "abort"

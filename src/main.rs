@@ -1,3 +1,6 @@
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 use chimera_install::{
     get_locales, get_timezones, Bootloader, PartitionType, RootData, Source, User,
 };
