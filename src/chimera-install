@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Colors
+BLACK="\Z0"
+RED="\Z1"
+GREEN="\Z2"
+YELLOW="\Z3"
+BLUE="\Z4"
+MAGENTA="\Z5"
+CYAN="\Z6"
+WHITE="\Z7"
+BOLD="\Zb"
+REVERSE="\Zr"
+UNDERLINE="\Zu"
+RESET="\Zn"
+
+MENULABEL="${BOLD}Use ↑/↓ to navigate list, ←/→ to navigate actions, and ⏎ to select.${RESET}"
+
+default_dialog() {
+    dialog --colors --keep-tite --no-mouse "$@"
+}
+
+menu() {
+  if [ -z "$DEFITEM"]; then
+      DEFITEM="Keyboard"
+  fi
+
+  default_dialog \
+      --title " ${MAGENTA}Chimera Linux Installer${RESET} " \
+      --menu "${MENULABEL}" 10 70 0 \
+      "Keyboard" "Set system keyboard" \
+      "Network" "Set up the network" \
+      "Source" "Set source installation" \
+      "Hostname" "Set system hostname" \
+      "Timezone" "Set system time zone" \
+      "RootPassword" "Set system root password" \
+      "UserAccount" "Set primary user name and password" \
+      "BootLoader" "Set disk to install bootloader" \
+      "Partition" "Partition disk(s)" \
+      "Filesystems" "Configure filesystems and mount points" \
+      "Install" "Start installation with saved settings" \
+      "Exit" "Exit installation"
+}
+
+menu
