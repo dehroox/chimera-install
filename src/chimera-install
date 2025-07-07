@@ -17,16 +17,17 @@ RESET="\Zn"
 MENULABEL="${BOLD}Use UP/DOWN to navigate list, LEFT/RIGHT to navigate actions, and ENTER to select.${RESET}"
 
 default_dialog() {
-    dialog --colors --keep-tite --no-mouse  --ascii-lines "$@"
+    dialog --colors --keep-tite --no-mouse --ascii-lines --stdout "$@"
 }
 
 menu() {
-  if [ -z "$DEFITEM"]; then
+  if [ -z "$DEFITEM" ]; then
       DEFITEM="Keyboard"
   fi
 
   default_dialog \
       --title " ${MAGENTA} Chimera Linux Installer ${RESET} " \
+      --default-item "$DEFITEM" \
       --menu "${MENULABEL}" 10 70 0 \
       "Keyboard" "Set system keyboard" \
       "Network" "Set up the network" \
@@ -42,4 +43,87 @@ menu() {
       "Exit" "Exit installation"
 }
 
-menu
+# Stub functions for menu actions
+menu_keyboard() {
+    default_dialog --title "Keyboard Setup" --msgbox "Keyboard configuration will be done here." 10 50
+}
+
+menu_network() {
+    default_dialog --title "Network Setup" --msgbox "Network configuration will be done here." 10 50
+}
+
+menu_source() {
+    default_dialog --title "Installation Source" --msgbox "Installation source setup will be done here." 10 50
+}
+
+menu_hostname() {
+    default_dialog --title "Hostname" --msgbox "System hostname configuration will be done here." 10 50
+}
+
+menu_timezone() {
+    default_dialog --title "Timezone" --msgbox "Timezone configuration will be done here." 10 50
+}
+
+menu_root_password() {
+    default_dialog --title "Root Password" --msgbox "Root password setup will be done here." 10 50
+}
+
+menu_user_account() {
+    default_dialog --title "User Account" --msgbox "User account creation will be done here." 10 50
+}
+
+menu_boot_loader() {
+    default_dialog --title "Bootloader" --msgbox "Bootloader installation will be done here." 10 50
+}
+
+menu_partition() {
+    default_dialog --title "Disk Partitioning" --msgbox "Disk partitioning will be done here." 10 50
+}
+
+menu_filesystems() {
+    default_dialog --title "Filesystems" --msgbox "Filesystem configuration will be done here." 10 50
+}
+
+menu_install() {
+    default_dialog --title "Confirmation" --yesno "Start installation with current settings?" 10 50
+    if [ $? -eq 0 ]; then
+        default_dialog --title "Installing" --infobox "Placeholder" 10 50
+        sleep 2
+        return 0
+    fi
+    return 1
+}
+
+# Main loop
+DEFITEM="Keyboard"
+while true; do
+    choice=$(menu)
+    status=$?
+    
+    if [ $status -ne 0 ]; then
+        clear
+        echo "Installation canceled."
+        exit 0
+    fi
+
+    case $choice in
+        Keyboard) menu_keyboard ;;
+        Network) menu_network ;;
+        Source) menu_source ;;
+        Hostname) menu_hostname ;;
+        Timezone) menu_timezone ;;
+        RootPassword) menu_root_password ;;
+        UserAccount) menu_user_account ;;
+        BootLoader) menu_boot_loader ;;
+        Partition) menu_partition ;;
+        Filesystems) menu_filesystems ;;
+        Install) 
+            menu_install
+            [ $? -eq 0 ] && break
+            ;;
+        Exit) 
+            default_dialog --title "Exit" --yesno "Are you sure?" 10 50 && break
+            ;;
+    esac
+    DEFITEM="$choice"
+done
