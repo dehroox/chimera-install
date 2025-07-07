@@ -14,10 +14,10 @@ REVERSE="\Zr"
 UNDERLINE="\Zu"
 RESET="\Zn"
 
-MENULABEL="${BOLD}Use ↑/↓ to navigate list, ←/→ to navigate actions, and ⏎ to select.${RESET}"
+MENULABEL="${BOLD}Use UP/DOWN to navigate list, LEFT/RIGHT to navigate actions, and ENTER to select.${RESET}"
 
 default_dialog() {
-    dialog --colors --keep-tite --no-mouse "$@"
+    dialog --colors --keep-tite --no-mouse  --ascii-lines "$@"
 }
 
 menu() {
@@ -26,7 +26,7 @@ menu() {
   fi
 
   default_dialog \
-      --title " ${MAGENTA}Chimera Linux Installer${RESET} " \
+      --title " ${MAGENTA} Chimera Linux Installer ${RESET} " \
       --menu "${MENULABEL}" 10 70 0 \
       "Keyboard" "Set system keyboard" \
       "Network" "Set up the network" \
